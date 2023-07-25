@@ -11,6 +11,7 @@ import string
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 data = []
+
 def config_reader():
     global login_text, password_text, workdir
     lines = ["","",""]
@@ -148,9 +149,10 @@ def Buying():
 
     driver.find_element(By.XPATH, '/html/body/div[3]/div/div/div[3]/button[2]').click()
     time.sleep(1)
-    driver.save_screenshot(f'{workdir}/Test'+ now_time + ".png")
+    driver.save_screenshot(f'{workdir}\Test'+ now_time + ".png")
 
     data.append(driver.find_element(By.XPATH, '/html/body/div[10]/p').text.splitlines()[0])
+
 
 
 driver.get("https://www.demoblaze.com/index.html")
@@ -169,3 +171,4 @@ data.append(password_text)
 logining_in(new_login_text,password_text)
 Buying()
 print_in_file(data)
+driver.close()

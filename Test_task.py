@@ -12,6 +12,7 @@ import string
 driver = webdriver.Chrome(ChromeDriverManager().install())
 data = []
 
+
 def config_reader():
     global login_text, password_text, workdir
     lines = ["","",""]
@@ -24,6 +25,7 @@ def config_reader():
     password_text = lines[1]
     workdir = lines[2]
 
+
 def print_in_file(Text):
     file_name = "Test_" + now_time + ".txt"
     full_file_loc = workdir + "/" + file_name
@@ -31,10 +33,10 @@ def print_in_file(Text):
         for i in Text:
             file.write(i)
 
+
 def generate_random_word(length):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for _ in range(length))
-
 
 
 def signin_up(login_text,password_text):
@@ -42,9 +44,7 @@ def signin_up(login_text,password_text):
     new_login_text = login_text
     driver.find_element(By.XPATH, '//*[@id="signin2"]').click()
 
-
     time.sleep(1)
-
 
     login = driver.find_element(By.XPATH, '//*[@id="sign-username"]')
     login.clear()
@@ -54,17 +54,14 @@ def signin_up(login_text,password_text):
     password.clear()
     password.send_keys(password_text)
 
-    
-
     driver.find_element(By.XPATH, '/html/body/div[2]/div/div/div[3]/button[2]').click()
 
-
     time.sleep(2)
-
 
     alert = driver.switch_to.alert
     alert_text = alert.text
     time.sleep(1)
+
     if(alert_text == "Sign up successful."):
         alert_text+="\n"
         data.append(alert_text)
@@ -74,11 +71,9 @@ def signin_up(login_text,password_text):
         
         new_login_text = login_text + now.strftime("%d%m%y%H%M%S")
         alert.dismiss()
-        
         time.sleep(1)
 
         driver.find_element(By.XPATH, '/html/body/div[2]/div/div/div[3]/button[1]').click()
-
         time.sleep(1)
 
         signin_up(new_login_text,password_text)
@@ -87,9 +82,7 @@ def signin_up(login_text,password_text):
 def logining_in(login_text, password_text):
     driver.find_element(By.XPATH, '//*[@id="login2"]').click()
 
-
     time.sleep(1)
-
 
     login = driver.find_element(By.XPATH, '//*[@id="loginusername"]')
     login.clear()
@@ -101,7 +94,6 @@ def logining_in(login_text, password_text):
 
     driver.find_element(By.XPATH, '/html/body/div[3]/div/div/div[3]/button[2]').click()
 
-    
     res = driver.find_element(By.XPATH, '//*[@id="nameofuser"]').text
     if(res == f"Welcome {login_text}"):
         data.append("Loged in successfuly\n")

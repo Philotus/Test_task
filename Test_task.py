@@ -7,9 +7,9 @@ import time
 from datetime import datetime
 import random
 import string
+import pickle
 
 
-driver = webdriver.Chrome(ChromeDriverManager().install())
 data = []
 
 
@@ -29,7 +29,7 @@ def config_reader():
 def print_in_file(Text):
     file_name = "Test_" + now_time + ".txt"
     full_file_loc = workdir + "/" + file_name
-    with open(full_file_loc, mode='a', newline='') as file:
+    with open(full_file_loc,'a', newline='') as file:
         for i in Text:
             file.write(i)
 
@@ -39,7 +39,7 @@ def generate_random_word(length):
     return ''.join(random.choice(letters) for _ in range(length))
 
 
-def signin_up(login_text,password_text):
+def signin_up(login_text,password_text, driver):
     global new_login_text
     new_login_text = login_text
     driver.find_element(By.XPATH, '//*[@id="signin2"]').click()
@@ -56,7 +56,7 @@ def signin_up(login_text,password_text):
 
     driver.find_element(By.XPATH, '/html/body/div[2]/div/div/div[3]/button[2]').click()
 
-    time.sleep(2)
+    time.sleep(0.5)
 
     alert = driver.switch_to.alert
     alert_text = alert.text
@@ -66,20 +66,29 @@ def signin_up(login_text,password_text):
         alert_text+="\n"
         data.append(alert_text)
         alert.dismiss()
-        time.sleep(1)
+        
     if(alert_text == "This user already exist."):
         
         new_login_text = login_text + now.strftime("%d%m%y%H%M%S")
         alert.dismiss()
-        time.sleep(1)
 
         driver.find_element(By.XPATH, '/html/body/div[2]/div/div/div[3]/button[1]').click()
-        time.sleep(1)
+        time.sleep(0.5)
 
-        signin_up(new_login_text,password_text)
+        signin_up(new_login_text,password_text, driver)
 
 
-def logining_in(login_text, password_text):
+def save_cookies(driver):
+    pickle.dump(driver.get_cookies(), open(f"{workdir}/cookies.txt", "wb"))
+
+
+def load_cookies(driver):
+    cookies = pickle.load(open(f"{workdir}/cookies.txt", "rb"))
+    for cookie in cookies:
+        driver.add_cookie(cookie)
+
+
+def logining_in(login_text, password_text, driver):
     driver.find_element(By.XPATH, '//*[@id="login2"]').click()
 
     time.sleep(1)
@@ -94,12 +103,22 @@ def logining_in(login_text, password_text):
 
     driver.find_element(By.XPATH, '/html/body/div[3]/div/div/div[3]/button[2]').click()
 
+    time.sleep(1.5)
+
     res = driver.find_element(By.XPATH, '//*[@id="nameofuser"]').text
-    if(res == f"Welcome {login_text}"):
-        data.append("Loged in successfuly\n")
+    if (res == ""):
+        time.sleep(1.5)
+        res = driver.find_element(By.XPATH, '//*[@id="nameofuser"]').text
+    
+    data.append(f"{res}\n")
+
+    time.sleep(0.5)
+
+    save_cookies(driver)
 
 
-def Buying():
+def Buying(driver):
+    load_cookies(driver)
     time.sleep(1)
     Check_list = [False, False, False]
     buttons = driver.find_elements(By.CLASS_NAME, 'list-group-item')
@@ -124,7 +143,7 @@ def Buying():
         Check_list[1] = True
     if(int(driver.find_element(By.XPATH, '//*[@id="totalp"]').text) == 1100):
         Check_list[2] = True
-    time.sleep(2)
+    time.sleep(0.5)
     if(Check_list[0] == True and Check_list[1] == True and Check_list[2] == True):
         driver.find_element(By.XPATH, '/html/body/div[6]/div/div[2]/button').click()
     else:
@@ -137,8 +156,7 @@ def Buying():
     driver.find_element(By.XPATH, '//*[@id="card"]').send_keys(generate_random_word(8))
     driver.find_element(By.XPATH, '//*[@id="month"]').send_keys(generate_random_word(8))
     driver.find_element(By.XPATH, '//*[@id="year"]').send_keys(generate_random_word(8))
-    time.sleep(1)
-
+    
     driver.find_element(By.XPATH, '/html/body/div[3]/div/div/div[3]/button[2]').click()
     time.sleep(1)
     driver.save_screenshot(f'{workdir}\Test'+ now_time + ".png")
@@ -146,21 +164,21 @@ def Buying():
     data.append(driver.find_element(By.XPATH, '/html/body/div[10]/p').text.splitlines()[0])
 
 
-
+driver = webdriver.Chrome()
 driver.get("https://www.demoblaze.com/index.html")
-time.sleep(3)
+time.sleep(2)
 now = datetime.now()
 now_time = now.strftime("%d_%m_%y_%H_%M_%S")
 
 config_reader()
-signin_up(login_text,password_text)
+signin_up(login_text, password_text, driver)
 new_login_text = new_login_text.replace('\n', '')
 new_login_text += "\n"
 data.append(new_login_text)
 data.append(password_text)
 
 
-logining_in(new_login_text,password_text)
-Buying()
+logining_in(new_login_text,password_text, driver)
+Buying(driver)
 print_in_file(data)
 driver.close()
